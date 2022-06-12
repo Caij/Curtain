@@ -26,7 +26,6 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                from components.release
                 groupId = 'com.github.Caij' //groupId 随便取
                 artifactId = 'Curtain'  //artifactId 随便取
             }
