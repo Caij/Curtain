@@ -3,6 +3,8 @@ package com.qw.curtain.lib;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -129,16 +131,28 @@ public class GuideDialogFragment extends DialogFragment implements IGuide {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         if (dialog == null) {
-            boolean isInterceptAll = param.isInterceptTouchEvent && param.isInterceptTarget;
-            if (isInterceptAll) {
+            if (param != null) {
+                boolean isInterceptAll = param.isInterceptTouchEvent && param.isInterceptTarget;
+                if (isInterceptAll) {
+                    dialog = new Dialog(requireActivity(), R.style.TransparentDialog);
+                } else {
+                    dialog = !param.isInterceptTouchEvent ?
+                            new NoInterceptActivityDialog(requireActivity(), R.style.TransparentDialog) :
+                            new NoInterceptViewAlertDialog(requireActivity(), R.style.TransparentDialog, param.hollows);
+                }
+                dialog.setContentView(contentView);
+                setAnimation(dialog);
+            } else { // fragment restore param null
                 dialog = new Dialog(requireActivity(), R.style.TransparentDialog);
-            } else {
-                dialog = !param.isInterceptTouchEvent ?
-                        new NoInterceptActivityDialog(requireActivity(), R.style.TransparentDialog) :
-                        new NoInterceptViewAlertDialog(requireActivity(), R.style.TransparentDialog, param.hollows);
+                dialog.setCancelable(true);
+                dialog.setCanceledOnTouchOutside(true);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        dismissAllowingStateLoss();
+                    }
+                });
             }
-            dialog.setContentView(contentView);
-            setAnimation(dialog);
         }
         return dialog;
     }
@@ -150,7 +164,7 @@ public class GuideDialogFragment extends DialogFragment implements IGuide {
         } catch (Exception e) {
             return;
         }
-        if (null != param.callBack) {
+        if (param != null && null != param.callBack) {
             param.callBack.onShow(this);
         }
     }
@@ -158,7 +172,7 @@ public class GuideDialogFragment extends DialogFragment implements IGuide {
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
         super.onDismiss(dialog);
-        if (null != param.callBack) {
+        if (param != null && null != param.callBack) {
             param.callBack.onDismiss(this);
         }
     }
